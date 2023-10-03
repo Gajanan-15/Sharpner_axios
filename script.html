@@ -1,0 +1,266 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+
+  <!-- bootstrap icon link  -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+
+  <!-- css link  -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- script link  -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
+
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+
+  <!-- axios link-->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+</head>
+
+<body>
+  <div class="container">
+    <div class="row">
+      <form id="myform" class="forms">
+        <label for="itemno">ItemNo</label>
+        <input type="number" class="form-control" placeholder="itemNo" id="itemno" name="itemno" required>
+        <label for="itemname">Item Name</label>
+        <input type="text" class="form-control" placeholder="itemname" id="itemname" name="itemname" required>
+        <label for="description">Description</label>
+        <input type="text" class="form-control" id="description" placeholder="description" name="description" required>
+        <label for="price">Price</label>
+        <input type="number" class="form-control" id="price" placeholder="enter price" name="price" required>
+        <label for="quantity">Quantity</label>
+        <input type="number" class="form-control" id="quantity" placeholder="enter Quantity" name="quantity" required>
+        <label for="total">Total Amount</label>
+        <input type="number" class="form-control" placeholder="Total Amount" id="total">
+        <button type="submit" class="btn btn-primary" value="Submit">Add Items</button>
+
+        <ul class="list"></ul>
+      </form>
+    </div>
+  </div>
+
+  <script>
+const forms = document.querySelector(".forms");
+// console.log(forms)
+
+
+
+// get request
+    function fetchUserDetails() {
+      axios.get("https://crudcrud.com/api/4382a8e049ae4a059b2fdb4fa5e31c78/buyers")
+        .then(response => {
+          const buyers = response.data;
+
+        //   for each method for traversal of each element 
+          buyers.forEach(buyer => {
+            const {itemno, itemname, description, price, quantity, total, _id} = buyer;
+
+            const key = `buyer_${_id}`;
+
+            // save to local storage also
+            localStorage.setItem(key, JSON.stringify(buyer))
+
+            const li = document.createElement("li");
+            li.textContent = `ItemNo : ${itemno}, Item Name: ${itemname}, Description: ${description},  Price: ${price}, Quantity: ${quantity}, Total Amount : ${quantity*price}`;
+
+
+// create an edit/update icon button 
+           const editicon =  document.createElement('i');
+           editicon.classList.add('bi', 'bi-pencil');
+           editicon.style.padding = '10px';
+           editicon.style.cursor = 'pointer'
+           editicon.style.color = 'blue'
+           editicon.style.fontSize = '20px';
+           editicon.addEventListener('click', () => updateForm(buyer))
+
+
+// create delete icon 
+            const deleteicon = document.createElement('i');
+            deleteicon.classList.add('bi', 'bi-trash');
+           deleteicon.style.padding = '10px';
+           deleteicon.style.cursor = 'pointer'
+           deleteicon.style.color = 'blue'
+           deleteicon.style.fontSize = '20px';
+            deleteicon.addEventListener('click', () => deleteBuyer(_id, li))
+
+          // create a div to hold the icons
+          const iconcontainer = document.createElement('div');
+          iconcontainer.style.display = 'flex';
+          iconcontainer.appendChild(editicon);
+          iconcontainer.appendChild(deleteicon);
+
+
+          // append the icons div to list item
+          li.appendChild(iconcontainer);
+          
+
+          // append the list item to the unorderd list
+          let list = document.querySelector(".list");
+          list.appendChild(li);
+
+          });
+
+        })
+        .catch(error => {
+          console.error(error);
+        });
+    };
+
+
+
+// function to update the data on cloud using put request 
+function updateForm(buyer){
+  const {itemno, itemname, description, price, quantity, total, _id } = buyer;
+
+  // unique id for editing
+let =   editingId = _id;
+
+  forms.itemname.value = itemname;
+  forms.description.value = description;
+  forms.price.value = price;
+  forms.quantity.value = quantity;
+  forms.total.value = price*quantity;
+
+}
+
+function upDateFormDetails(event){
+  event.preventDefault();
+
+  const itemname = forms.itemname.value;
+  const description = forms.description.value;
+  const price = forms.price.value;
+  const quantity = forms.quantity.value;
+  const total = forms.quantity.value*price;
+
+const buyer = {itemname, description, price, quantity, total};
+
+// make a put request 
+axios.put(`https://crudcrud.com/api/4382a8e049ae4a059b2fdb4fa5e31c78/buyers/${editingId}`, buyer)
+  .then(response =>{
+
+    forms.reset();
+
+    editingId = null;
+
+    list.innerHTML = '';
+    fetchUserDetails();
+
+
+  })
+  .catch(error => {
+    console.error(error);
+  });
+
+};
+
+
+// Function to delete a user
+function deleteBuyer(buyerid, list){
+  axios.delete(` https://crudcrud.com/api/4382a8e049ae4a059b2fdb4fa5e31c78/buyers/${buyerid} `)
+  .then(response =>{
+    const key = `buyer_${buyerid}`;
+    localStorage.removeItem(key);
+
+    li.removeChild(list);
+
+  })
+  .catch(error => {
+      console.error(error);
+    });
+
+}
+
+
+
+// post request
+    let myform = document.getElementById("myform");
+
+    myform.addEventListener('submit', function (event) {
+      event.preventDefault();
+        const itemno = document.getElementById("itemno").value;
+      const itemname = document.getElementById('itemname').value;
+      const description = document.getElementById('description').value;
+      const price = document.getElementById('price').value;
+      const quantity = document.getElementById('quantity').value;
+      const total = price * quantity;
+      const buyer = {itemno, itemname, description, price, quantity, total };
+
+      axios.post("https://crudcrud.com/api/4382a8e049ae4a059b2fdb4fa5e31c78/buyers", buyer)
+        .then(response => {
+          const data = response.data;
+          const {itemno, itemname, description, price, quantity, total, _id } = data;
+
+
+             const key = `buyer_${_id}`;
+
+            // save to local storage also
+            localStorage.setItem(key, JSON.stringify(buyer))
+
+
+
+          const li = document.createElement("li");
+          li.textContent = `itemNo : ${itemno}, Item Name: ${itemname}, Description: ${description}, Price: ${price}, Quantity: ${quantity}, Total Amount : ${quantity*price}`;
+
+
+
+
+// create an edit/update icon button 
+const editicon =  document.createElement('i');
+           editicon.classList.add('bi', 'bi-pencil');
+           editicon.style.padding = '10px';
+           editicon.style.cursor = 'pointer'
+           editicon.style.color = 'blue'
+           editicon.style.fontSize = '20px';
+           editicon.addEventListener('click', () => updateForm(buyer))
+
+
+// create delete icon 
+            const deleteicon = document.createElement('i');
+            deleteicon.classList.add('bi', 'bi-trash');
+           deleteicon.style.padding = '10px';
+           deleteicon.style.cursor = 'pointer'
+           deleteicon.style.color = 'blue'
+           deleteicon.style.fontSize = '20px';
+            deleteicon.addEventListener('click', () => deleteBuyer(_id, li))
+
+          // create a div to hold the icons
+          const iconcontainer = document.createElement('div');
+          iconcontainer.style.display = 'flex';
+          iconcontainer.appendChild(editicon);
+          iconcontainer.appendChild(deleteicon);
+
+
+          // append the icons div to list item
+          li.appendChild(iconcontainer);
+          
+
+
+          // list
+          let list = document.querySelector(".list");
+          list.appendChild(li);
+        })
+        .catch(error => {
+          console.error(error);
+        });
+
+
+    });
+
+
+    forms.addEventListener('submit', upDateFormDetails)
+    document.addEventListener('DOMContentLoaded', fetchUserDetails);
+  </script>
+</body>
+
+</html>
